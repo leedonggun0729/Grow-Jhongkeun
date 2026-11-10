@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>종근이 키우기</title>
+  <link rel="icon" href="아이콘.jpg" type="image/jpg">
+
+  <style>
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    #lev-up {
+      background: gold;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 25px;
+    }
+
+    #job {
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 25px;
+    }
+
+    #part-time {
+      background: blue;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 30px;
+    }
+
+    body {
+      background-image: url('게임배경.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      text-align: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* 아우라 게이지 */
+    .aura-bar {
+      width: 300px;
+      max-width: 90%;
+      height: 25px;
+      background: gray;
+      border: 2px solid black;
+      border-radius: 10px;
+      margin: 10px auto;
+      overflow: hidden;
+    }
+
+    #aura-fill {
+      width: 0%;
+      height: 100%;
+      background: purple;
+      transition: width 0.2s;
+    }
+
+    /* 각성 화면 */
+    #aura-effect {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: black;
+      color: white;
+      z-index: 999;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    #aura-effect h1 {
+      font-size: 100px;
+      margin: 10px;
+    }
+
+    /* 화면 흑백 */
+    .black-white {
+      filter: grayscale(100%);
+    }
+
+    /* 화면 흔들림 */
+    .shake {
+      animation: shaking 0.1s infinite;
+    }
+
+    @keyframes shaking {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(5px, 5px); }
+      50% { transform: translate(-5px, -5px); }
+      75% { transform: translate(5px, -5px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    #not-complete {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <!--시작 화면-->
+  <div id="start-screen" class="screen active">
+    <img src="종근이키우기.png" width="750" alt="종근이키우기">
+    <br>
+    <img src="슈퍼종근이.png" width="150" alt="슈퍼종근이">
+    <br>
+    <button id="start-btn" style="background: none; border: none;">
+      <img src="시작버튼.png" width="300" alt="시작버튼">
+    </button>
+  </div>
+
+  <!--게임 화면-->
+  <div id="game-screen" class="screen">
+    <img src="종근이키우기.png" width="750" alt="종근이키우기">
+    <br>
+    <img src="우종근이.png" width="150" alt="우종근이">
+
+    <p>칭호: <span id="jk-title">응애 종근</span></p>
+    <p>현재 종근이 레벨: <span id="jk-level">1</span></p>
+    <p>남은 코인: <span id="jk-coin">0</span>원</p>
+
+    <button id="lev-up">레벨 업</button>
+
+    <p>💀 AURA: <span id="aura-number">0</span> / 999</p>
+
+    <div class="aura-bar">
+      <div id="aura-fill"></div>
+    </div>
+
+    <p>필요 코인: <span id="lev-cost">100</span>원</p>
+
+    <button id="part-time">
+      알바(+<span id="part-money">100</span>원)
+    </button>
+
+    <button id="job">
+      직장(+<span id="job-money">50</span>원/초)
+    </button>
+
+    <p><button id="shop-btn">상점가기</button></p>
+  </div>
+
+  <!--상점 화면-->
+  <div id="shop-screen" class="screen">
+    <h1>상점</h1>
+    <h2>상점에 오신것을 환영합니다.</h2>
+    <p><span id="not-complete">상점 기능은 아직 미완성입니다.</span></p>
+
+    <img src="따봉종근이.png" width="150" alt="사장종근">
+
+    <p>
+      무엇을 구매하실건가요?
+      <br>
+      보유 코인: <span id="shop-coin">0</span>원
+    </p>
+
+    <ul>
+      <li>나무 검 <button id="wooden-sword">구매하기</button> 13,500원</li>
+      <li>돌 검 <button id="stone-sword">구매하기</button> 50,000원</li>
+      <li>철 검 <button id="iron-sword">구매하기</button> 100,000원</li>
+      <li>금 검 <button id="gold-sword">구매하기</button> 200,000원</li>
+    </ul>
+
+    <p><button id="back-btn">뒤로가기</button></p>
+  </div>
+
+  <div id="aura-effect">
+    <h1>💀</h1>
+    <h2>AURA 999</h2>
+    <p>종근이 각성!</p>
+  </div>
+
+  <audio id="aura-music" src="aura.mp3" preload="auto"></audio>
+
+  <script>
+    let level = 1;
+    let coin = 0;
+    let level_cost = 100;
+    let job_find = false;
+
+    //상점 아이템
+    let buy_wooden_sword = false;
+    let buy_stone_sword = false;
+    let buy_iron_sword = false;
+    let buy_gold_sword = false;
+
+    //AURA
+    let aura = 0;
+    let aura_awakened = false;
+
+    //AURA
+    const aura_number = document.getElementById('aura-number');
+    const aura_fill = document.getElementById('aura-fill');
+    const aura_effect = document.getElementById('aura-effect');
+    const aura_music = document.getElementById('aura-music');
+
+    //버튼
+    const start_btn = document.getElementById('start-btn');
+    const shop_btn = document.getElementById('shop-btn');
+    const back_btn = document.getElementById('back-btn');
+
+    //상점 아이템
+    const wooden_sword = document.getElementById('wooden-sword');
+    const stone_sword = document.getElementById('stone-sword');
+    const iron_sword = document.getElementById('iron-sword');
+    const gold_sword = document.getElementById('gold-sword');
+
+    //스크린
+    const start_screen = document.getElementById('start-screen');
+    const game_screen = document.getElementById('game-screen');
+    const shop_screen = document.getElementById('shop-screen');
+
+    //레벨 관련
+    const lev_up = document.getElementById('lev-up');
+    const jk_level = document.getElementById('jk-level');
+
+    //칭호
+    const jk_title = document.getElementById('jk-title');
+
+    //돈 관련
+    const jk_coin = document.getElementById('jk-coin');
+    const shop_coin = document.getElementById('shop-coin');
+    const part_money = document.getElementById('part-money');
+    const job_money = document.getElementById('job-money');
+
+    //돈 버는 일 관련
+    const part_time = document.getElementById('part-time');
+    const job = document.getElementById('job');
+
+    //렙업 비용
+    const lev_cost = document.getElementById('lev-cost');
+
+    function updateCoin() {
+      jk_coin.innerText = coin.toLocaleString('ko-KR');
+      shop_coin.innerText = coin.toLocaleString('ko-KR');
+    }
+
+    function updateJob() {
+      const income = (50 * level).toLocaleString('ko-KR');
+
+      if (job_find === true) {
+        job.innerText = "취직 완료 (" + income + "원/초)";
+      } else {
+        job_money.innerText = income;
+      }
+    }
+
+    // 화면 전환
+    start_btn.addEventListener('click', function() {
+      start_screen.classList.remove('active');
+      game_screen.classList.add('active');
+    });
+
+    back_btn.addEventListener('click', function() {
+      shop_screen.classList.remove('active');
+      game_screen.classList.add('active');
+    });
+
+    shop_btn.addEventListener('click', function() {
+      game_screen.classList.remove('active');
+      shop_screen.classList.add('active');
+      updateCoin();
+    });
+
+    part_time.addEventListener('click', function() {
+      coin = coin + (100 * level);
+      updateCoin();
+
+      if (aura_awakened === false) {
+        aura = Math.min(aura + 10, 999);
+
+        aura_number.innerText = aura;
+        aura_fill.style.width = (aura / 999 * 100) + "%";
+
+        if (aura >= 999) {
+          aura_awakened = true;
+
+          game_screen.classList.add('black-white');
+          aura_effect.style.display = 'flex';
+          aura_effect.classList.add('shake');
+
+          aura_music.currentTime = 0;
+          aura_music.play().catch(function() {
+            console.log("음악을 재생할 수 없습니다.");
+          });
+
+          setTimeout(function() {
+            aura_effect.style.display = 'none';
+            aura_effect.classList.remove('shake');
+            game_screen.classList.remove('black-white');
+
+            aura_music.pause();
+            aura_music.currentTime = 0;
+          }, 5000);
+        }
+      }
+    });
+
+    // 레벨 업 시스템
+    lev_up.addEventListener('click', function() {
+      if (coin >= level_cost) {
+        coin = coin - level_cost;
+        level = level + 1;
+        level_cost = level_cost * 2;
+
+        updateCoin();
+
+        jk_level.innerText = level;
+        lev_cost.innerText = level_cost.toLocaleString('ko-KR');
+        part_money.innerText = (100 * level).toLocaleString('ko-KR');
+
+        updateJob();
+
+        if (level >= 100) {
+          jk_title.innerText = "만렙 종근";
+        } else if (level >= 50) {
+          jk_title.innerText = "최강 종근";
+        } else if (level >= 25) {
+          jk_title.innerText = "용감한 종근";
+        } else if (level >= 10) {
+          jk_title.innerText = "멋진 종근";
+        } else {
+          jk_title.innerText = "응애 종근";
+        }
+      } else {
+        alert("코인이 부족합니다");
+      }
+    });
+
+    // 직업 시스템 (확률 취업 + 초당 자동 채굴)
+    job.addEventListener('click', function() {
+      if (job_find === false) {
+        let job_random = Math.random();
+
+        if (job_random < 0.2) {
+          job_find = true;
+
+          updateJob();
+          alert("성공");
+
+          setInterval(function() {
+            coin = coin + (50 * level);
+            updateCoin();
+          }, 1000);
+
+        } else {
+          alert("탈락");
+        }
+      } else {
+        alert("이미 취업에 성공한 상태임");
+      }
+    });
+
+    //상점 시스템
+    wooden_sword.addEventListener('click', function() {
+      if (buy_wooden_sword === false) {
+        if (coin >= 13500) {
+          coin = coin - 13500;
+          updateCoin();
+
+          wooden_sword.innerText = "구매 완료";
+          buy_wooden_sword = true;
+        } else {
+          alert("코인이 부족합니다!");
+        }
+      } else {
+        alert("이미 구입한 아이템입니다!");
+      }
+    });
+
+    stone_sword.addEventListener('click', function() {
+      if (buy_stone_sword === false) {
+        if (coin >= 50000) {
+          coin = coin - 50000;
+          updateCoin();
+
+          stone_sword.innerText = "구매 완료";
+          buy_stone_sword = true;
+        } else {
+          alert("코인이 부족합니다!");
+        }
+      } else {
+        alert("이미 구입한 아이템입니다!");
+      }
+    });
+
+    iron_sword.addEventListener('click', function() {
+      if (buy_iron_sword === false) {
+        if (coin >= 100000) {
+          coin = coin - 100000;
+          updateCoin();
+
+          iron_sword.innerText = "구매 완료";
+          buy_iron_sword = true;
+        } else {
+          alert("코인이 부족합니다!");
+        }
+      } else {
+        alert("이미 구입한 아이템입니다!");
+      }
+    });
+
+    gold_sword.addEventListener('click', function() {
+      if (buy_gold_sword === false) {
+        if (coin >= 200000) {
+          coin = coin - 200000;
+          updateCoin();
+
+          gold_sword.innerText = "구매 완료";
+          buy_gold_sword = true;
+        } else {
+          alert("코인이 부족합니다!");
+        }
+      } else {
+        alert("이미 구입한 아이템입니다!");
+      }
+    });
+  </script>
+</body>
+</html>
